@@ -6,6 +6,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -13,7 +14,9 @@ import java.util.stream.Collectors;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,6 +34,10 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -42,13 +49,28 @@ public class SecurityConfig {
 		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
 		return http
+				.cors(Customizer.withDefaults())
 				.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
 				.oidc(withDefaults())
 				.and()
 				.exceptionHandling(e -> e
 				.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
-				.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
+				.oauth2ResourceServer(resourceServer -> resourceServer.jwt(Customizer.withDefaults()))
 				.build();
+	}
+
+	@Bean
+	CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:1234", "http://127.0.0.1:1234"));
+		configuration.setAllowedMethods(Arrays.asList("GET","POST","PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"));
+		configuration.setAllowCredentials(true);
+		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type"));
+		configuration.setExposedHeaders(Arrays.asList("X-Get-Header"));
+		configuration.setMaxAge(3600L);
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
 	}
 	
 	@Bean
@@ -70,23 +92,24 @@ public class SecurityConfig {
 		return AuthorizationServerSettings.builder().build();
 	}
 	
-	@Bean
-	OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
-		return context -> {
-			Authentication principal = context.getPrincipal();
-			if (context.getTokenType().getValue().equals("id_token")) {
-				context.getClaims().claim("Test", "Test Id Token");
-			}
-			if (context.getTokenType().getValue().equals("access_token")) {
-				context.getClaims().claim("Test", "Test Access Token");
-				Set<String> authorities = principal.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
-                context.getClaims().claim("authorities", authorities)
-                        .claim("user", principal.getName());
-			}
-		};
-	}
-	
+//	@Bean
+//	OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
+//		return context -> {
+//			Authentication principal = context.getPrincipal();
+//			if (context.getTokenType().getValue().equals("id_token")) {
+//				context.getClaims().claim("Test", "Test Id Token");
+//			}
+//			if (context.getTokenType().getValue().equals("access_token")) {
+//				context.getClaims().claim("Test", "Test Access Token");
+//				Set<String> authorities = principal.getAuthorities().stream()
+//                        .map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
+//                context.getClaims().claim("authorities", authorities)
+//                        .claim("user", principal.getName());
+//			}
+//		};
+//	}
+
+
 	@Bean 
 	JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
 		return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);

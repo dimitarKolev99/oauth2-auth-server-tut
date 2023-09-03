@@ -1,5 +1,6 @@
 package authserver.entity;
 
+import java.util.Collection;
 import java.util.Set;
 
 import jakarta.persistence.CascadeType;
@@ -17,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
@@ -42,7 +44,8 @@ public class SecurityUser implements UserDetails{
 			@JoinColumn(name = "USERS_ID", referencedColumnName = "ID") }, inverseJoinColumns = {
 					@JoinColumn(name = "AUTHORITIES_ID", referencedColumnName = "ID") })
 	private Set<Authority> authorities;
-	
+//	private Collection<? extends GrantedAuthority> authorities;
+
 	private Boolean accountNonExpired;
 	private Boolean accountNonLocked;
 	private Boolean credentialsNonExpired;
