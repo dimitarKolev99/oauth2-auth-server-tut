@@ -2,31 +2,26 @@ package authserver.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import java.io.IOException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Arrays;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
@@ -34,10 +29,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
+import org.springframework.security.web.session.SessionManagementFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -49,28 +41,68 @@ public class SecurityConfig {
 		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
 		return http
-				.cors(Customizer.withDefaults())
+				.addFilterBefore(corsFilter(), SessionManagementFilter.class)
+				//				.cors(Customizer.withDefaults())
 				.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
 				.oidc(withDefaults())
 				.and()
 				.exceptionHandling(e -> e
 				.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
-				.oauth2ResourceServer(resourceServer -> resourceServer.jwt(Customizer.withDefaults()))
+				.oauth2ResourceServer(resourceServer -> resourceServer.jwt(withDefaults()))
 				.build();
 	}
 
 	@Bean
-	CorsConfigurationSource corsConfigurationSource() {
-		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:1234", "http://127.0.0.1:1234"));
-		configuration.setAllowedMethods(Arrays.asList("GET","POST","PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"));
-		configuration.setAllowCredentials(true);
-		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type"));
-		configuration.setExposedHeaders(Arrays.asList("X-Get-Header"));
-		configuration.setMaxAge(3600L);
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", configuration);
-		return source;
+	public CorsFilter corsFilter() {
+		return new CorsFilter();
+	}
+
+
+//	@Bean
+//	CorsConfigurationSource corsConfigurationSource() {
+//		CorsConfiguration configuration = new CorsConfiguration();
+//		configuration.setAllowedOrigins(Arrays.asList("http://localhost:1234", "http://127.0.0.1:1234"));
+//		configuration.setAllowedMethods(Arrays.asList("GET","POST","PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"));
+//		configuration.setAllowCredentials(true);
+//		configuration.setAllowedHeaders(Arrays.asList("*"));
+//		configuration.setMaxAge(3600L);
+//		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//		source.registerCorsConfiguration("/**", configuration);
+//		return source;
+//	}
+
+	@Order(Ordered.HIGHEST_PRECEDENCE)
+	private class CorsFilter implements Filter //javax.servlet.Filter
+	{
+
+		@Override
+		public void init(FilterConfig filterConfig) throws ServletException {
+
+		}
+
+		@Override
+		public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+			HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+			response.setHeader("Access-Control-Allow-Origin", "*");
+			response.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
+			response.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Max-Age", "86400");
+			if ("OPTIONS".equalsIgnoreCase(((HttpServletRequest) servletRequest).getMethod())) {
+				response.setStatus(HttpServletResponse.SC_OK);
+			} else {
+				filterChain.doFilter(servletRequest, response);
+			}
+
+		}
+
+
+
+		@Override
+		public void destroy() {
+
+		}
 	}
 	
 	@Bean
@@ -81,7 +113,7 @@ public class SecurityConfig {
 				.authorizeHttpRequests(authorize ->authorize.anyRequest().authenticated())
 				.build();
 	}
-	
+
 	@Bean
 	BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();

@@ -2,7 +2,11 @@ package authserver.config;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
+import authserver.entity.Authority;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -19,12 +23,19 @@ import authserver.repository.UserRepository;
 @Service
 public class JpaUserDetailsManager implements UserDetailsManager {
 
+	public static final Logger LOGGER = LoggerFactory.getLogger(JpaUserDetailsManager.class);
+
 	private final UserRepository userRepository;
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		SecurityUser user = userRepository.findByUsername(username);
+
+		LOGGER.debug("SecurityUser: {}", user);
+
 		if (!user.getUsername().equals(username)) {
+			LOGGER.debug("In exception");
+
 			throw new UsernameNotFoundException("Access Denied");
 		}
 		Collection<GrantedAuthority> authoriies = new HashSet<>();
@@ -33,9 +44,20 @@ public class JpaUserDetailsManager implements UserDetailsManager {
 				user.getCredentialsNonExpired(), user.getAccountNonLocked(), authoriies);
 	}
 
+
 	@Override
 	public void createUser(UserDetails user) {
-		userRepository.save((SecurityUser) user);
+		Set<Authority> authorities = new HashSet<>();
+
+		user.getAuthorities().forEach(auth -> authorities.add(new Authority(user.getUsername(), auth.getAuthority())));
+
+		SecurityUser securityUser = new SecurityUser();
+		securityUser.setAuthorities(authorities);
+		securityUser.setUsername(user.getUsername());
+		securityUser.setPassword(user.getPassword());
+		securityUser.setEnabled(true);
+
+		userRepository.save(securityUser);
 	}
 
 	@Override
@@ -53,7 +75,7 @@ public class JpaUserDetailsManager implements UserDetailsManager {
 	@Override
 	public boolean userExists(String username) {
 		SecurityUser user = userRepository.findByUsername(username);
-		if (user.getUsername().equals(username)) {
+		if (user != null && user.getUsername().equals(username)) {
 			return true;
 		}
 		return false;

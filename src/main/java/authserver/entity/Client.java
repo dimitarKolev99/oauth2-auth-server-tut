@@ -9,17 +9,21 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 
 @Entity
 @Table(name = "client")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@DynamicInsert
 public class Client {
 
 	@Id
 	private String id;
 	private String clientId;
+	@ColumnDefault("CURRENT TIMESTAMP")
 	private Instant clientIdIssuedAt;
 	private String clientSecret;
 	private Instant clientSecretExpiresAt;
