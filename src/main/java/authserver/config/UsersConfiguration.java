@@ -7,7 +7,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 
 import javax.sql.DataSource;
@@ -18,20 +20,24 @@ import java.util.Map;
 public class UsersConfiguration {
 
     @Bean
-    ApplicationRunner usersRunner(PasswordEncoder passwordEncoder, JpaUserDetailsManager jpaUserDetailsManager) {
+    JdbcUserDetailsManager jdbcUserDetailsManager(DataSource dataSource) {
+        return new JdbcUserDetailsManager(dataSource);
+    }
+
+    @Bean
+    ApplicationRunner usersRunner(UserDetailsManager userDetailsManager, UserRepository userRepository) {
         return args -> {
-            User.UserBuilder builder = User.builder().roles("USER").passwordEncoder(passwordEncoder::encode);
+            User.UserBuilder builder = User.builder().roles("USER");
 
-            Map<String, String> users = Map.of("User", "{bcrypt}$2a$10$qRyOjYldTzpIdUqT.YF/meVKXkONN1mWa02onw/XPtn.Bc2UocJx6", "rwinch", "p@ssw0rd");
+            Map<String, String> users = Map.of("User", "{bcrypt}$2a$10$BZ0eJi5yhG/LOHRyjunjCuDRCXWc2aqKbEQwS36kzlBWiSc.oEnle", "rwinch", "p@ssw0rd");
             users.forEach((username, password) -> {
-                if (!jpaUserDetailsManager.userExists(username)) {
-                    User.UserBuilder user = builder
+                if (!userDetailsManager.userExists(username)) {
+                    UserDetails user = builder
                             .username(username)
-                            .password(password);
+                            .password(password)
+                            .build();
 
-                    UserDetails userDetails = user.build();
-
-                    jpaUserDetailsManager.createUser(userDetails);
+                    userDetailsManager.createUser(user);
                 }
             });
         };

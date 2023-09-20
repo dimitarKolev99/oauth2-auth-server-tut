@@ -1,5 +1,5 @@
 -- clients
-CREATE TABLE if not exists client
+CREATE TABLE if not exists oauth2_registered_client
 (
     id                                  varchar(100)                                    NOT NULL,
     client_id                           varchar(100)                                    NOT NULL,
@@ -22,10 +22,10 @@ create table if not exists users
 (
     username varchar(200) not null primary key,
     password varchar(500) not null,
-    enabled  boolean  default true  not null,
-    account_non_expired boolean default true,
-    account_non_locked boolean default true,
-    credentials_non_expired boolean default true
+    enabled  boolean  default true  not null
+--    account_non_expired boolean default true,
+--    account_non_locked boolean default true,
+--    credentials_non_expired boolean default true
 );
 
 create table if not exists authorities
@@ -37,7 +37,7 @@ create table if not exists authorities
 );
 
 --
-create table if not exists authorization_consent
+create table if not exists oauth2_authorization_consent
 (
     registered_client_id varchar(100)  NOT NULL,
     principal_name       varchar(200)  NOT NULL,
@@ -45,7 +45,7 @@ create table if not exists authorization_consent
     PRIMARY KEY (registered_client_id, principal_name)
 );
 
-create table if not exists authorizations
+create table if not exists oauth2_authorization
 (
     id                            varchar(100) NOT NULL,
     registered_client_id          varchar(100) NOT NULL,
@@ -80,6 +80,7 @@ create table if not exists authorizations
     device_code_issued_at         timestamp     DEFAULT NULL,
     device_code_expires_at        timestamp     DEFAULT NULL,
     device_code_metadata          text          DEFAULT NULL,
+    oidc_id_token_claims          text          DEFAULT NULL,
     PRIMARY KEY (id)
 );
 

@@ -12,7 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "authorizations")
+@Table(name = "oauth2_authorization")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

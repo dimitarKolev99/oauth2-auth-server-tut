@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "authorizationConsent")
+@Table(name = "oauth2_authorization_consent")
 @IdClass(AuthorizationConsent.AuthorizationConsentId.class)
 @Data
 @AllArgsConstructor

@@ -18,6 +18,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
@@ -41,7 +43,7 @@ public class SecurityConfig {
 		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
 		return http
-				.addFilterBefore(corsFilter(), SessionManagementFilter.class)
+//				.addFilterBefore(corsFilter(), SessionManagementFilter.class)
 				//				.cors(Customizer.withDefaults())
 				.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
 				.oidc(withDefaults())
@@ -52,10 +54,10 @@ public class SecurityConfig {
 				.build();
 	}
 
-	@Bean
-	public CorsFilter corsFilter() {
-		return new CorsFilter();
-	}
+//	@Bean
+//	public CorsFilter corsFilter() {
+//		return new CorsFilter();
+//	}
 
 
 //	@Bean
@@ -71,39 +73,39 @@ public class SecurityConfig {
 //		return source;
 //	}
 
-	@Order(Ordered.HIGHEST_PRECEDENCE)
-	private class CorsFilter implements Filter //javax.servlet.Filter
-	{
-
-		@Override
-		public void init(FilterConfig filterConfig) throws ServletException {
-
-		}
-
-		@Override
-		public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-			HttpServletResponse response = (HttpServletResponse) servletResponse;
-
-			response.setHeader("Access-Control-Allow-Origin", "*");
-			response.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
-			response.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Max-Age", "86400");
-			if ("OPTIONS".equalsIgnoreCase(((HttpServletRequest) servletRequest).getMethod())) {
-				response.setStatus(HttpServletResponse.SC_OK);
-			} else {
-				filterChain.doFilter(servletRequest, response);
-			}
-
-		}
-
-
-
-		@Override
-		public void destroy() {
-
-		}
-	}
+//	@Order(Ordered.HIGHEST_PRECEDENCE)
+//	private class CorsFilter implements Filter //javax.servlet.Filter
+//	{
+//
+//		@Override
+//		public void init(FilterConfig filterConfig) throws ServletException {
+//
+//		}
+//
+//		@Override
+//		public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+//			HttpServletResponse response = (HttpServletResponse) servletResponse;
+//
+//			response.setHeader("Access-Control-Allow-Origin", "*");
+//			response.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
+//			response.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+//			response.setHeader("Access-Control-Allow-Credentials", "true");
+//			response.setHeader("Access-Control-Max-Age", "86400");
+//			if ("OPTIONS".equalsIgnoreCase(((HttpServletRequest) servletRequest).getMethod())) {
+//				response.setStatus(HttpServletResponse.SC_OK);
+//			} else {
+//				filterChain.doFilter(servletRequest, response);
+//			}
+//
+//		}
+//
+//
+//
+//		@Override
+//		public void destroy() {
+//
+//		}
+//	}
 	
 	@Bean
 	@Order(2)
@@ -115,8 +117,8 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	BCryptPasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
+	PasswordEncoder passwordEncoder() {
+		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
 	}
 	
 	@Bean

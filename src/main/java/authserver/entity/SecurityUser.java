@@ -16,7 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SecurityUser implements UserDetails{
+public class SecurityUser {
 
 //	@Id
 //	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,27 +35,27 @@ public class SecurityUser implements UserDetails{
 	private Set<Authority> authorities;
 //	private Collection<? extends GrantedAuthority> authorities;
 
-	private Boolean accountNonExpired;
-	private Boolean accountNonLocked;
-	private Boolean credentialsNonExpired;
+//	private Boolean accountNonExpired;
+//	private Boolean accountNonLocked;
+//	private Boolean credentialsNonExpired;
 	private Boolean enabled;
 
-	@Override
-	public boolean isAccountNonExpired() {
-		return accountNonExpired;
-	}
+//	@Override
+//	public boolean isAccountNonExpired() {
+//		return accountNonExpired;
+//	}
+//
+//	@Override
+//	public boolean isAccountNonLocked() {
+//		return accountNonLocked;
+//	}
+//
+//	@Override
+//	public boolean isCredentialsNonExpired() {
+//		return credentialsNonExpired;
+//	}
 
-	@Override
-	public boolean isAccountNonLocked() {
-		return accountNonLocked;
-	}
-
-	@Override
-	public boolean isCredentialsNonExpired() {
-		return credentialsNonExpired;
-	}
-
-	@Override
+//	@Override
 	public boolean isEnabled() {
 		return enabled;
 	}

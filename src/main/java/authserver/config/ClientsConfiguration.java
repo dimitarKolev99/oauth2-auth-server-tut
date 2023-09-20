@@ -19,7 +19,12 @@ import java.util.UUID;
 public class ClientsConfiguration {
 
     @Bean
-    ApplicationRunner clientsRunner(JpaRegisteredClientRepository repository) {
+    RegisteredClientRepository registeredClientRepository(JdbcTemplate template) {
+        return new JdbcRegisteredClientRepository(template);
+    }
+
+    @Bean
+    ApplicationRunner clientsRunner(RegisteredClientRepository repository) {
         return args -> {
             String clientId = "client";
             if (repository.findByClientId(clientId) == null) {
@@ -27,7 +32,7 @@ public class ClientsConfiguration {
                         RegisteredClient
                                 .withId(UUID.randomUUID().toString())
                                 .clientId(clientId)
-                                .clientSecret("{bcrypt}$2a$10$qRyOjYldTzpIdUqT.YF/meVKXkONN1mWa02onw/XPtn.Bc2UocJx6")
+                                .clientSecret("{bcrypt}$2a$10$BZ0eJi5yhG/LOHRyjunjCuDRCXWc2aqKbEQwS36kzlBWiSc.oEnle")
                                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                                 .authorizationGrantTypes(grantTypes -> grantTypes.addAll(Set.of(
                                         AuthorizationGrantType.CLIENT_CREDENTIALS,
