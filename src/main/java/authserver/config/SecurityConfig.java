@@ -144,17 +144,17 @@ public class SecurityConfig {
 //	}
 
 
-	@Bean 
-	JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
-		return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
-	}
+//	@Bean
+//	JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+//		return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+//	}
 	
-	@Bean
-	JWKSource<SecurityContext> jwkSource() {
-		RSAKey rsaKey = generateRsa();
-		JWKSet jwkSet = new JWKSet(rsaKey);
-		return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
-	}
+//	@Bean
+//	JWKSource<SecurityContext> jwkSource() {
+//		RSAKey rsaKey = generateRsa();
+//		JWKSet jwkSet = new JWKSet(rsaKey);
+//		return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+//	}
 
 	public static RSAKey generateRsa() {
 		KeyPair keyPair = generateRsaKey();
