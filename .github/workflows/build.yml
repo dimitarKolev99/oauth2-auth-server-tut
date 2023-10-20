@@ -1,0 +1,65 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Authserver Project Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15.2
+        env:
+          - POSTGRES_USER=postgres
+          - PGUSER=postgres
+          - POSTGRES_NAME=postgres
+          - POSTGRES_PASSWORD=postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    env:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build with Maven
+      env: # Or as an environment variable
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_ACCESS_KEY_SECRET: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+        S3_REGION_NAME: ${{ secrets.S3_REGION_NAME }}
+        S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        JWT_KEY_PRIVATE: ${{ secrets.JWT_KEY_PRIVATE }}
+        JWT_KEY_PUBLIC: ${{ secrets.JWT_KEY_PUBLIC }}
+        JWT_KEY_ID: ${{ secrets.JWT_KEY_ID }}
+        JWT_PERSISTENCE_PASSWORD: ${{ secrets.JWT_PERSISTENCE_PASSWORD }}
+        JWT_PERSISTENCE_SALT: ${{ secrets.JWT_PERSISTENCE_SALT }}
+      run: mvn clean install
+
+    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
+    #- name: Update dependency graph
+    #  uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6

@@ -1,6 +1,8 @@
 package authserver.config;
 
 import authserver.repository.ClientRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,12 +13,16 @@ import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 @Configuration
 public class ClientsConfiguration {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(ClientsConfiguration.class);
 
     @Bean
     RegisteredClientRepository registeredClientRepository(JdbcTemplate template) {
@@ -27,7 +33,13 @@ public class ClientsConfiguration {
     ApplicationRunner clientsRunner(RegisteredClientRepository repository) {
         return args -> {
             String clientId = "client";
+
+            LOGGER.debug("RegisteredClientRepository: {}", repository.findByClientId(clientId));
+
             if (repository.findByClientId(clientId) == null) {
+
+                LOGGER.debug("repository.findByClientId(clientId) == null");
+
                 repository.save(
                         RegisteredClient
                                 .withId(UUID.randomUUID().toString())
@@ -39,6 +51,7 @@ public class ClientsConfiguration {
                                         AuthorizationGrantType.AUTHORIZATION_CODE,
                                         AuthorizationGrantType.REFRESH_TOKEN
                                 )))
+                                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
                                 .redirectUri("http://127.0.0.1:8080/login/oauth2/code/gateway")
                                 .scopes(scopes -> scopes.addAll(Set.of("user.read", "user.write", OidcScopes.PROFILE, OidcScopes.OPENID)))
                                 .build()

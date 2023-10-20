@@ -25,7 +25,7 @@ public class UsersConfiguration {
     }
 
     @Bean
-    ApplicationRunner usersRunner(UserDetailsManager userDetailsManager, UserRepository userRepository) {
+    ApplicationRunner usersRunner(UserDetailsManager userDetailsManager) {
         return args -> {
             User.UserBuilder builder = User.builder().roles("USER");
 

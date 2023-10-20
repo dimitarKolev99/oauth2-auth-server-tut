@@ -16,7 +16,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,88 +35,52 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.security.web.session.SessionManagementFilter;
+import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 @Configuration
 public class SecurityConfig {
 
 	@Bean
 	@Order(1)
-	SecurityFilterChain asSecurityFilterChain(HttpSecurity http) throws Exception {
-		
+	SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
+			throws Exception {
 		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+		http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+				.oidc(withDefaults());
+		http
+				.exceptionHandling((exceptions) -> exceptions
+						.defaultAuthenticationEntryPointFor(
+								new LoginUrlAuthenticationEntryPoint("/login"),
+								new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
+						)
+				)
+				.oauth2ResourceServer((resourceServer) -> resourceServer
+						.jwt(withDefaults()));
 
-		return http
-//				.addFilterBefore(corsFilter(), SessionManagementFilter.class)
-				//				.cors(Customizer.withDefaults())
-				.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-				.oidc(withDefaults())
-				.and()
-				.exceptionHandling(e -> e
-				.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
-				.oauth2ResourceServer(resourceServer -> resourceServer.jwt(withDefaults()))
-				.build();
+		return http.build();
 	}
 
-//	@Bean
-//	public CorsFilter corsFilter() {
-//		return new CorsFilter();
-//	}
-
-
-//	@Bean
-//	CorsConfigurationSource corsConfigurationSource() {
-//		CorsConfiguration configuration = new CorsConfiguration();
-//		configuration.setAllowedOrigins(Arrays.asList("http://localhost:1234", "http://127.0.0.1:1234"));
-//		configuration.setAllowedMethods(Arrays.asList("GET","POST","PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"));
-//		configuration.setAllowCredentials(true);
-//		configuration.setAllowedHeaders(Arrays.asList("*"));
-//		configuration.setMaxAge(3600L);
-//		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//		source.registerCorsConfiguration("/**", configuration);
-//		return source;
-//	}
-
-//	@Order(Ordered.HIGHEST_PRECEDENCE)
-//	private class CorsFilter implements Filter //javax.servlet.Filter
-//	{
-//
-//		@Override
-//		public void init(FilterConfig filterConfig) throws ServletException {
-//
-//		}
-//
-//		@Override
-//		public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-//			HttpServletResponse response = (HttpServletResponse) servletResponse;
-//
-//			response.setHeader("Access-Control-Allow-Origin", "*");
-//			response.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
-//			response.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-//			response.setHeader("Access-Control-Allow-Credentials", "true");
-//			response.setHeader("Access-Control-Max-Age", "86400");
-//			if ("OPTIONS".equalsIgnoreCase(((HttpServletRequest) servletRequest).getMethod())) {
-//				response.setStatus(HttpServletResponse.SC_OK);
-//			} else {
-//				filterChain.doFilter(servletRequest, response);
-//			}
-//
-//		}
-//
-//
-//
-//		@Override
-//		public void destroy() {
-//
-//		}
-//	}
-	
 	@Bean
 	@Order(2)
-	SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
-		return http
-				.formLogin(withDefaults())
-				.authorizeHttpRequests(authorize ->authorize.anyRequest().authenticated())
-				.build();
+	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
+			throws Exception {
+		http
+				.csrf(csrf -> csrf.ignoringRequestMatchers("/register")) //hmm?
+				.authorizeHttpRequests((authorize) -> authorize
+						.requestMatchers("/error", "/register").permitAll()
+						.anyRequest().authenticated())
+				.formLogin(formLogin -> formLogin
+						.loginPage("/login")
+						.permitAll()
+				);
+		return http.build();
+	}
+
+	@Bean
+	WebSecurityCustomizer webSecurityCustomizer() {
+		return (web) -> web.debug(false)
+				.ignoring()
+				.requestMatchers("/webjars/**", "/images/**", "/css/**", "/assets/**", "/favicon.ico");
 	}
 
 	@Bean
@@ -125,53 +92,5 @@ public class SecurityConfig {
 	AuthorizationServerSettings authorizationServerSettings() {
 		return AuthorizationServerSettings.builder().build();
 	}
-	
-//	@Bean
-//	OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
-//		return context -> {
-//			Authentication principal = context.getPrincipal();
-//			if (context.getTokenType().getValue().equals("id_token")) {
-//				context.getClaims().claim("Test", "Test Id Token");
-//			}
-//			if (context.getTokenType().getValue().equals("access_token")) {
-//				context.getClaims().claim("Test", "Test Access Token");
-//				Set<String> authorities = principal.getAuthorities().stream()
-//                        .map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
-//                context.getClaims().claim("authorities", authorities)
-//                        .claim("user", principal.getName());
-//			}
-//		};
-//	}
 
-
-//	@Bean
-//	JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
-//		return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
-//	}
-	
-//	@Bean
-//	JWKSource<SecurityContext> jwkSource() {
-//		RSAKey rsaKey = generateRsa();
-//		JWKSet jwkSet = new JWKSet(rsaKey);
-//		return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
-//	}
-
-	public static RSAKey generateRsa() {
-		KeyPair keyPair = generateRsaKey();
-		RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-		RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-		return new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(UUID.randomUUID().toString()).build();
-	}
-
-	static KeyPair generateRsaKey() {
-		KeyPair keyPair;
-		try {
-			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-			keyPairGenerator.initialize(2048);
-			keyPair = keyPairGenerator.generateKeyPair();
-		} catch (Exception ex) {
-			throw new IllegalStateException(ex);
-		}
-		return keyPair;
-	}
 }
