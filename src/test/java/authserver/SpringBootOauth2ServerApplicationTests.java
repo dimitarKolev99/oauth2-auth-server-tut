@@ -55,8 +55,20 @@ class SpringBootOauth2ServerApplicationTests {
 		WebResponse signInResponse = signIn(page, "User", "password").getWebResponse();
 
 		assertThat(signInResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+	}
 
+	@Test
+	public void whenLoggingInAndRequestingTokenThenRedirectsToClientApplication() throws IOException {
+		this.webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+		this.webClient.getOptions().setRedirectEnabled(false);
+		signIn(this.webClient.getPage("/login"), "User", "password");
 
+		WebResponse response = this.webClient.getPage(AUTHORIZATION_REQUEST).getWebResponse();
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.MOVED_PERMANENTLY.value());
+		String location = response.getResponseHeaderValue("location");
+		assertThat(location).startsWith(REDIRECT_URI);
+		assertThat(location).contains("code=");
 	}
 
 	private void assertLoginPage(HtmlPage page) {
