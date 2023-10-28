@@ -4,7 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import authserver.entity.SecurityUser;
 
+import java.util.List;
+
 public interface UserRepository extends JpaRepository<SecurityUser, String>{
 
-	SecurityUser findByUsername(String username);
+	List<SecurityUser> findByUsername(String username);
 }

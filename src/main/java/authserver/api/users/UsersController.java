@@ -36,9 +36,12 @@ public class UsersController {
         User.UserBuilder builder = User.builder().roles("USER");
 
         if (!userDetailsManager.userExists(registration.getUsername())) {
+
+            LOGGER.debug("TEST LOG HERE");
+
             UserDetails user = builder
-                    .username(passwordEncoder.encode(registration.getUsername()))
-                    .password(registration.getPassword())
+                    .username(registration.getUsername())
+                    .password(passwordEncoder.encode(registration.getPassword()))
                     .build();
 
             userDetailsManager.createUser(user);
