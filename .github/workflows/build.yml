@@ -6,9 +6,8 @@ on:
       - '**'
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:15.2
@@ -36,7 +35,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
-    - name: Build with Maven
+    - name: Build with Maven and run tests
       env: # Or as an environment variable
         GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
@@ -52,3 +51,34 @@ jobs:
       run: mvn clean install
 
 
+  dev:
+    name: deploy cloudrun to dev environment
+    if: ${{ github.ref == 'refs/heads/develop' || github.base_ref == 'develop' }}
+    uses: ./.github/workflows/_deployment.yaml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      environment: dev
+      ref: ${{ github.sha }}
+    secrets: inherit
+  stage:
+    if: ${{ github.ref == 'refs/heads/stage' || github.base_ref == 'stage' }}
+    uses: ./.github/workflows/_deployment.yaml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      environment: stage
+      ref: ${{ github.sha }}
+    secrets: inherit
+  prod:
+    if: ${{ github.ref == 'refs/heads/main' || github.base_ref == 'main' }}
+    uses: ./.github/workflows/_deployment.yaml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      environment: prod
+      ref: ${{ github.sha }}
+    secrets: inherit
