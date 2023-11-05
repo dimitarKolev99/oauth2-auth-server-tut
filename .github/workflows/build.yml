@@ -1,118 +1,58 @@
-#name: Authserver Project Build
-#
-#on:
-#  push:
-#    branches: [ "main" ]
-#  pull_request:
-#    branches: [ "main" ]
-#
-#jobs:
-#  build:
-#
-#    permissions:
-#      id-token: write
-#      contents: read
-#    runs-on: ubuntu-latest
-#
-#    services:
-#      postgres:
-#        image: postgres:15.2
-#        env:
-#          POSTGRES_USER: postgres
-#          PGUSER: postgres
-#          POSTGRES_NAME: postgres
-#          POSTGRES_PASSWORD: postgres
-#        ports:
-#          - 5432:5432
-#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-#
-#    env:
-#      POSTGRES_HOST: localhost
-#      POSTGRES_PORT: 5432
-#      POSTGRES_PASSWORD: postgres
-#      POSTGRES_USER: postgres
-#
-#    steps:
-#    - uses: actions/checkout@v3
-#
-#    - id: 'auth'
-#      name: 'Authenticate to Google Cloud'
-#      uses: 'google-GitHub-actions/auth@v1'
-#      with:
-#        create_credentials_file: true
-#        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-#        service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
-#
-#    - name: 'Networking activities'
-#      run: |-
-#        gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
-#        gcloud compute firewall-rules list --format="table(
-#            name,
-#            network,
-#            direction,
-#            priority
-#        )"
-#      continue-on-error: true
-#
-#    - name: Set up JDK 17
-#      uses: actions/setup-java@v3
-#      with:
-#        java-version: '17'
-#        distribution: 'temurin'
-#        cache: maven
-#    - name: Build with Maven
-#      env: # Or as an environment variable
-#        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-#        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-#        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#        AWS_ACCESS_KEY_SECRET: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
-#        S3_REGION_NAME: ${{ secrets.S3_REGION_NAME }}
-#        S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-#        JWT_KEY_PRIVATE: ${{ secrets.JWT_KEY_PRIVATE }}
-#        JWT_KEY_PUBLIC: ${{ secrets.JWT_KEY_PUBLIC }}
-#        JWT_KEY_ID: ${{ secrets.JWT_KEY_ID }}
-#        JWT_PERSISTENCE_PASSWORD: ${{ secrets.JWT_PERSISTENCE_PASSWORD }}
-#        JWT_PERSISTENCE_SALT: ${{ secrets.JWT_PERSISTENCE_SALT }}
-#      run: mvn clean install
+name: Authserver Project Build
 
-name: apply on merge
-  # Allows you to run this workflow on merge
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - '**'
 
-#  env:
-#    REGION: us-central1 # TODO: update Cloud Run service region
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  GitHub-actions-wif:
-    # Allow the job to fetch a GitHub ID token
+  build:
+
     permissions:
       id-token: write
       contents: read
-
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15.2
+        env:
+          POSTGRES_USER: postgres
+          PGUSER: postgres
+          POSTGRES_NAME: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+
     steps:
-      - uses: actions/checkout@v3
+    - name: Checkout
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build with Maven
+      env: # Or as an environment variable
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_ACCESS_KEY_SECRET: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+        S3_REGION_NAME: ${{ secrets.S3_REGION_NAME }}
+        S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        JWT_KEY_PRIVATE: ${{ secrets.JWT_KEY_PRIVATE }}
+        JWT_KEY_PUBLIC: ${{ secrets.JWT_KEY_PUBLIC }}
+        JWT_KEY_ID: ${{ secrets.JWT_KEY_ID }}
+        JWT_PERSISTENCE_PASSWORD: ${{ secrets.JWT_PERSISTENCE_PASSWORD }}
+        JWT_PERSISTENCE_SALT: ${{ secrets.JWT_PERSISTENCE_SALT }}
+      run: mvn clean install
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-GitHub-actions/auth@v1'
-        with:
-          create_credentials_file: true
-          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
-
-      - name: 'Networking activities'
-        run: |-
-          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
-          gcloud compute firewall-rules list --format="table(
-              name,
-              network,
-              direction,
-              priority
-          )"
-        continue-on-error: true
 
