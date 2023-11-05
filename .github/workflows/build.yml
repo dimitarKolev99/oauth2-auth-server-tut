@@ -79,8 +79,8 @@ name: apply on merge
   # Allows you to run this workflow on merge
 on:
   push:
-    branches:
-      - $default-branch
+    branches: [ "main" ]
+
 #  env:
 #    REGION: us-central1 # TODO: update Cloud Run service region
 
