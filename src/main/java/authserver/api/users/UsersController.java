@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 //import authserver.config.JpaUserDetailsManager;
 
 import java.io.IOException;
@@ -29,9 +30,9 @@ public class UsersController {
     public static final Logger LOGGER = LoggerFactory.getLogger(UsersController.class);
 
     @PostMapping("/register")
-    public void registerUser(Model model,
-                             @ModelAttribute("registration") RegisterUserRequest registration,
-                             HttpServletResponse response) throws IOException {
+    public RedirectView registerUser(Model model,
+                                     @ModelAttribute("registration") RegisterUserRequest registration,
+                                     HttpServletResponse response) throws IOException {
 
         User.UserBuilder builder = User.builder().roles("USER");
 
@@ -46,13 +47,16 @@ public class UsersController {
 
             userDetailsManager.createUser(user);
 
-            response.setHeader("Location", "http://127.0.0.1:8080/oauth2/authorization/gateway");
-            response.setStatus(302);
+            RedirectView redirectView = new RedirectView();
+            redirectView.setUrl("http://127.0.0.1:8080/oauth2/authorization/gateway");
 
+            return redirectView;
         }
 
-        response.setHeader("Location", "http://127.0.0.1:8080/register");
-        response.setStatus(302);
+        RedirectView redirectView = new RedirectView();
+        redirectView.setUrl("http://127.0.0.1:8080/register");
+
+        return redirectView;
     }
 
 }
