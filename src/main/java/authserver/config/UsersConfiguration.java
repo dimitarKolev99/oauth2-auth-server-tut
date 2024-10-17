@@ -23,24 +23,4 @@ public class UsersConfiguration {
     JdbcUserDetailsManager jdbcUserDetailsManager(DataSource dataSource) {
         return new JdbcUserDetailsManager(dataSource);
     }
-
-    @Bean
-    ApplicationRunner usersRunner(UserDetailsManager userDetailsManager) {
-        return args -> {
-            User.UserBuilder builder = User.builder().roles("USER");
-
-            Map<String, String> users = Map.of("User", "{bcrypt}$2a$10$BZ0eJi5yhG/LOHRyjunjCuDRCXWc2aqKbEQwS36kzlBWiSc.oEnle", "rwinch", "p@ssw0rd");
-            users.forEach((username, password) -> {
-                if (!userDetailsManager.userExists(username)) {
-                    UserDetails user = builder
-                            .username(username)
-                            .password(password)
-                            .build();
-
-                    userDetailsManager.createUser(user);
-                }
-            });
-        };
-    }
-
 }

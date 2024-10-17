@@ -1,6 +1,7 @@
 package authserver.config;
 
 import authserver.repository.ClientRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
@@ -20,9 +21,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Configuration
+@Slf4j
 public class ClientsConfiguration {
-
-    public static final Logger LOGGER = LoggerFactory.getLogger(ClientsConfiguration.class);
 
     @Bean
     RegisteredClientRepository registeredClientRepository(JdbcTemplate template) {
@@ -34,11 +34,11 @@ public class ClientsConfiguration {
         return args -> {
             String clientId = "client";
 
-            LOGGER.debug("RegisteredClientRepository: {}", repository.findByClientId(clientId));
+            log.debug("RegisteredClientRepository: {}", repository.findByClientId(clientId));
 
             if (repository.findByClientId(clientId) == null) {
 
-                LOGGER.debug("repository.findByClientId(clientId) == null");
+                log.debug("repository.findByClientId(clientId) == null");
 
                 repository.save(
                         RegisteredClient
