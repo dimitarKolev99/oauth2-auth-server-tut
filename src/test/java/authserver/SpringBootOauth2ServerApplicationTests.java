@@ -52,6 +52,7 @@ class SpringBootOauth2ServerApplicationTests extends AuthServerBaseTest{
 
 	@AfterEach
 	void cleanUp() {
+
 		if (userDetailsManager.userExists(testUser.getUsername())) {
 			userDetailsManager.deleteUser(testUser.getUsername());
 		}
@@ -70,14 +71,14 @@ class SpringBootOauth2ServerApplicationTests extends AuthServerBaseTest{
 	}
 
 	@Test
-	public void whenNotLoggedInAndRequestingTokenThenRedirectsToLogin() throws IOException {
+	void whenNotLoggedInAndRequestingTokenThenRedirectsToLogin() throws IOException {
 		HtmlPage page = this.webClient.getPage(AUTHORIZATION_REQUEST);
 
 		assertLoginPage(page);
 	}
 
 	@Test
-	public void whenLoggingInAndRequestingTokenThenRedirectsToClientApplication() throws IOException {
+	void whenLoggingInAndRequestingTokenThenRedirectsToClientApplication() throws IOException {
 		this.webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
 		this.webClient.getOptions().setRedirectEnabled(false);
 		signIn(this.webClient.getPage("/login"), "User", "password");

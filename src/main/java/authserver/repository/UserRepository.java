@@ -6,7 +6,9 @@ import authserver.entity.SecurityUser;
 
 import java.util.List;
 
-public interface UserRepository extends JpaRepository<SecurityUser, String>{
+public interface UserRepository extends JpaRepository<SecurityUser, Long>{
 
 	List<SecurityUser> findByUsername(String username);
+
+	boolean existsByUsername(String username);
 }

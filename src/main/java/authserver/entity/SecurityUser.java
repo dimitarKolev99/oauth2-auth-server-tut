@@ -1,15 +1,13 @@
 package authserver.entity;
 
-import java.util.Collection;
-import java.util.Set;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -18,10 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 @NoArgsConstructor
 public class SecurityUser {
 
-//	@Id
-//	@GeneratedValue(strategy = GenerationType.IDENTITY)
-//	private Integer id;
-	
 	@NonNull
 	@Id
 	@Column(unique = true)
